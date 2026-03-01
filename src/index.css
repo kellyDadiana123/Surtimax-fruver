@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #00d26a; /* Surtimax Brand Green */
+  --color-primary-dark: #00a854;
+  --color-primary-content: #ffffff;
+  --color-background-light: #f9fafb;
+  --color-background-dark: #111827;
+  --color-surface-light: #ffffff;
+  --color-surface-dark: #1f2937;
+  --color-text-main: #111827;
+  --color-text-muted: #6b7280;
+  --color-border-color: #e5e7eb;
+
+  --font-display: "Inter", "Manrope", sans-serif;
+  --font-body: "Inter", "Manrope", sans-serif;
+}
+
+@layer utilities {
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Custom styles for professional storefront look */
+body {
+  background-color: var(--color-background-light);
+  color: var(--color-text-main);
+  font-family: var(--font-body);
+}
+
+/* Utilities para el verde de marca (usar text-primary, bg-primary, etc) */
