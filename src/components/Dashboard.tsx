@@ -336,6 +336,17 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
                             </div>
                         </div>
 
+                        <div className="col-span-1 md:col-span-2 lg:col-span-4">
+                            <label className="block text-xs font-bold text-neutral-500 uppercase tracking-wider mb-2">URL de Imagen (Opcional)</label>
+                            <input
+                                type="url"
+                                value={formData.image_url}
+                                onChange={e => setFormData({ ...formData, image_url: e.target.value })}
+                                className="w-full px-4 py-3 rounded-xl border border-neutral-200 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 transition-colors bg-neutral-50 focus:bg-white text-sm outline-none font-medium"
+                                placeholder="https://ejemplo.com/imagen.jpg"
+                            />
+                        </div>
+
                         <div className="col-span-1 md:col-span-2 lg:col-span-4 flex items-center mb-2 mt-4">
                             <label className="relative inline-flex items-center cursor-pointer gap-3">
                                 <input
@@ -425,9 +436,17 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
                                         product.price > 5 ? 'bg-gradient-to-br from-emerald-50 to-teal-50' :
                                             'bg-gradient-to-br from-indigo-50 to-blue-50'
                                         }`}>
-                                        <div className="absolute inset-0 flex items-center justify-center opacity-40">
-                                            <LayoutGrid className="w-12 h-12 text-black/20" />
-                                        </div>
+                                        {product.image_url ? (
+                                            <img
+                                                src={product.image_url}
+                                                alt={product.name}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="absolute inset-0 flex items-center justify-center opacity-40">
+                                                <LayoutGrid className="w-12 h-12 text-black/20" />
+                                            </div>
+                                        )}
                                         {/* Badge de "Sugerencia" o Estado */}
                                         <div className="absolute top-4 left-4 flex flex-col gap-1">
                                             {product.is_offer && (
