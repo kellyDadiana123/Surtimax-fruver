@@ -162,14 +162,19 @@ export default function HomePage() {
         </nav>
         <div className="flex items-center gap-3">
           {session ? (
+            // --- USUARIO LOGUEADO ---
+            // Si hay sesión (local o de Supabase), mostramos el nombre y el botón de Salir
             <div className="flex items-center gap-4">
               <div className="hidden lg:flex flex-col items-end">
                 <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Bienvenido</span>
+                {/* Mostramos la primera parte del email como nombre de usuario */}
                 <span className="text-sm font-bold text-neutral-800">{session.user?.email?.split('@')[0]}</span>
               </div>
               <button
                 onClick={async () => {
+                  // Cierra sesión en Supabase
                   await supabase.auth.signOut();
+                  // IMPORTANTE: Limpia también la sesión local para que el Header se actualice
                   localStorage.removeItem('local-session');
                   setSession(null);
                   setToast("Sesión cerrada");

@@ -46,26 +46,29 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
 
     try {
       if (isLogin) {
-        // --- INICIO DE SESIÓN LOCAL ---
-        // Intentar autenticar al usuario con el servicio Express local.
+        // --- LOGIN LOCAL ---
+        // Realizamos una petición POST a nuestro servidor local
         const response = await fetch('http://localhost:3001/api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
+          body: JSON.stringify({ email, password }),
         });
 
         const data = await response.json();
 
-        if (!response.ok) {
+        if (response.ok) {
+          // --- ÉXITO ---
+          // Si el login fue exitoso, mostramos el mensaje que devuelve el servidor
+          setSuccessMsg(data.message);
+
+          // Llamamos al callback del padre pasándole los datos del usuario logueado
+          // Esto sirve para que App.tsx gestione la sesión
+          onAuthSuccess(data.user);
+        } else {
+          // Si el servidor devuelve un error (response.ok es false), lanzamos una excepción
+          // para que sea capturada por el bloque catch y se muestre el mensaje de error.
           throw new Error(data.message || 'Error en la autenticación.');
         }
-
-        // --- ÉXITO ---
-        setSuccessMsg(data.message);
-
-        // Simulamos una sesión mínima para que App.tsx crea que estamos logueados
-        // En una implementación real, aquí guardaríamos un token, etc.
-        onAuthSuccess(data.user);
       } else {
         // --- REGISTRO DE NUEVA CUENTA ---
         // Registrar un nuevo usuario en la base de datos de Supabase.

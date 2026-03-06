@@ -32,13 +32,15 @@ function App() {
    * Se ejecuta una sola vez al montar el componente.
    */
   useEffect(() => {
-    // Primero revisar si hay una sesión local guardada (para pruebas locales)
+    // --- SESIÓN LOCAL (Prioridad para desarrollo) ---
+    // Primero revisamos si hay una sesión guardada en localStorage (de nuestro servidor local)
     const localSession = localStorage.getItem('local-session');
     if (localSession) {
+      // Si existe, la cargamos directamente para saltarnos Supabase
       setSession(JSON.parse(localSession));
       setLoading(false);
     } else {
-      // Obtener la sesión actual de forma asíncrona de Supabase
+      // Si no hay sesión local, intentamos obtener la sesión normal de Supabase
       supabase.auth.getSession().then(({ data: { session } }) => {
         setSession(session);
         setLoading(false);
