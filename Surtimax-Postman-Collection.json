@@ -2,6 +2,7 @@
     "info": {
         "_postman_id": "8706b3f8-692a-43d9-9524-7f8582d1c681",
         "name": "Surtimax Local Auth",
+        "description": "ESTE ARCHIVO ES UNA COLECCIÓN DE POSTMAN. \n\nInstrucciones:\n1. Asegúrate de que el servidor local esté corriendo (npx tsx server.ts).\n2. Importa este archivo en Postman.\n3. Ejecuta las peticiones para probar el login.\n\nNota: Los archivos JSON no permiten comentarios con //, por eso usamos este campo de descripción.",
         "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
     },
     "item": [
@@ -12,12 +13,14 @@
                 "header": [
                     {
                         "key": "Content-Type",
-                        "value": "application/json"
+                        "value": "application/json",
+                        "description": "Indica que enviamos datos en formato JSON"
                     }
                 ],
                 "body": {
                     "mode": "raw",
-                    "raw": "{\n    \"email\": \"kellyDadiana@example.com\",\n    \"password\": \"kelly123\"\n}"
+                    "raw": "{\n    \"email\": \"kellyDadiana@example.com\",\n    \"password\": \"kelly123\"\n}",
+                    "description": "Cuerpo de la petición con correo y contraseña válidos"
                 },
                 "url": {
                     "raw": "http://localhost:3001/api/login",
@@ -31,7 +34,7 @@
                         "login"
                     ]
                 },
-                "description": "Prueba de inicio de sesión exitoso con las credenciales de Kelly Dadiana."
+                "description": "PRUEBA 1: ÉXITO TOTAL. \nUsa el usuario 'kellyDadiana'. Si todo está bien, el servidor responderá con un mensaje de éxito y los datos del usuario."
             },
             "response": []
         },
@@ -61,7 +64,7 @@
                         "login"
                     ]
                 },
-                "description": "Prueba de inicio de sesión exitoso con el usuario de prueba genérico."
+                "description": "PRUEBA 2: USUARIO GENÉRICO. \nUsa el segundo usuario de prueba ('test@example.com'). Sirve para verificar que la base de datos reconoce múltiples cuentas."
             },
             "response": []
         },
@@ -91,7 +94,7 @@
                         "login"
                     ]
                 },
-                "description": "Prueba de inicio de sesión fallido con credenciales erróneas para verificar el mensaje de error."
+                "description": "PRUEBA 3: ERROR DE AUTENTICACIÓN. \nUsa datos que no existen. El servidor debe responder con un error 401 y el mensaje 'Error en la autenticación.'."
             },
             "response": []
         }
