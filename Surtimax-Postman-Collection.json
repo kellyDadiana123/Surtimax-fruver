@@ -1,0 +1,99 @@
+{
+    "info": {
+        "_postman_id": "8706b3f8-692a-43d9-9524-7f8582d1c681",
+        "name": "Surtimax Local Auth",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+        {
+            "name": "Login Kelly Dadiana (Exitoso)",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"email\": \"kellyDadiana@example.com\",\n    \"password\": \"kelly123\"\n}"
+                },
+                "url": {
+                    "raw": "http://localhost:3001/api/login",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "3001",
+                    "path": [
+                        "api",
+                        "login"
+                    ]
+                },
+                "description": "Prueba de inicio de sesión exitoso con las credenciales de Kelly Dadiana."
+            },
+            "response": []
+        },
+        {
+            "name": "Login Test (Exitoso)",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"email\": \"test@example.com\",\n    \"password\": \"password123\"\n}"
+                },
+                "url": {
+                    "raw": "http://localhost:3001/api/login",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "3001",
+                    "path": [
+                        "api",
+                        "login"
+                    ]
+                },
+                "description": "Prueba de inicio de sesión exitoso con el usuario de prueba genérico."
+            },
+            "response": []
+        },
+        {
+            "name": "Login Fallido",
+            "request": {
+                "method": "POST",
+                "header": [
+                    {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                    }
+                ],
+                "body": {
+                    "mode": "raw",
+                    "raw": "{\n    \"email\": \"error@ejemplo.com\",\n    \"password\": \"clave_incorrecta\"\n}"
+                },
+                "url": {
+                    "raw": "http://localhost:3001/api/login",
+                    "protocol": "http",
+                    "host": [
+                        "localhost"
+                    ],
+                    "port": "3001",
+                    "path": [
+                        "api",
+                        "login"
+                    ]
+                },
+                "description": "Prueba de inicio de sesión fallido con credenciales erróneas para verificar el mensaje de error."
+            },
+            "response": []
+        }
+    ]
+}
