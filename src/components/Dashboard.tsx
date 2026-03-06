@@ -4,6 +4,7 @@ import type { Product } from '../types/supabase';
 import { User } from '@supabase/supabase-js';
 import { LogOut, Plus, Trash2, Edit2, Search, Bell, PackageOpen, LayoutGrid, CheckCircle2, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import FloatingFruits from './FloatingFruits';
 
 interface DashboardProps {
     user: User;
@@ -18,21 +19,31 @@ interface DashboardProps {
  * Reemplaza el uso de alertas nativas por mensajes Toast integrados.
  */
 export default function Dashboard({ user, onLogout }: DashboardProps) {
-    // Estado para la lista de productos
+    // --- ESTADO DEL INVENTARIO ---
+    // Almacena la lista completa de productos del usuario autenticado
     const [products, setProducts] = useState<Product[]>([]);
+    // Controla el estado de carga al obtener datos de la base de datos
     const [loading, setLoading] = useState(true);
 
-    // Estados para retroalimentación visual amigable (Toasts)
+    // --- SISTEMA DE NOTIFICACIONES (TOASTS) ---
+    // Maneja mensajes de éxito o error que aparecen temporalmente en la UI
     const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
 
-    // Función auxiliar para mostrar un mensaje temporal en pantalla
+    /**
+     * Muestra una notificación visual en la parte superior de la pantalla.
+     * @param message Texto a mostrar.
+     * @param type Tipo de alerta ('success' para verde, 'error' para rojo).
+     */
     const showToast = (message: string, type: 'success' | 'error' = 'success') => {
         setToast({ message, type });
-        setTimeout(() => setToast(null), 4000); // Ocultar después de 4 segundos
+        // Auto-ocultar tras 4 segundos para no obstruir la vista
+        setTimeout(() => setToast(null), 4000);
     };
 
-    // Estados del formulario
+    // --- GESTIÓN DEL FORMULARIO ---
+    // Si contiene un ID, indica que estamos editando ese producto; de lo contrario, estamos creando uno nuevo.
     const [isEditing, setIsEditing] = useState<string | null>(null);
+    // Datos temporales del formulario sincronizados con los inputs
     const [formData, setFormData] = useState({
         name: '',
         description: '',
@@ -98,20 +109,20 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
         try {
             if (isEditing) {
                 // Modo actualizar producto
-                // @ts-ignore
-                const { error } = await supabase
-                    .from('products')
-                    .update(productData as any)
+                // Modo actualizar producto
+                const { error } = await (supabase
+                    .from('products') as any)
+                    .update(productData)
                     .eq('id', isEditing);
 
                 if (error) throw error;
                 showToast('Producto actualizado exitosamente');
             } else {
                 // Modo crear producto nuevo
-                // @ts-ignore
-                const { error } = await supabase
-                    .from('products')
-                    .insert([productData as any]);
+                // Modo crear producto nuevo
+                const { error } = await (supabase
+                    .from('products') as any)
+                    .insert([productData]);
 
                 if (error) throw error;
                 showToast('Producto añadido a tu inventario');
@@ -187,6 +198,8 @@ export default function Dashboard({ user, onLogout }: DashboardProps) {
 
     return (
         <div className="min-h-screen bg-gray-50 text-neutral-800 font-sans relative">
+            {/* Integración del componente FloatingFruits */}
+            <FloatingFruits />
 
             {/* Sistema Integrado de Notificaciones (Toasts) */}
             <AnimatePresence>

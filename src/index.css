@@ -1,19 +1,20 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #00d26a; /* Surtimax Brand Green */
-  --color-primary-dark: #00a854;
-  --color-primary-content: #ffffff;
-  --color-background-light: #f9fafb;
-  --color-background-dark: #111827;
+  --color-primary: #10b981; /* Emerald-500 */
+  --color-primary-dark: #059669;
+  --color-secondary: #f43f5e; /* Rose-500 */
+  --color-accent: #f59e0b; /* Amber-500 */
+  --color-background-light: #f8fafc;
+  --color-background-dark: #0f172a;
   --color-surface-light: #ffffff;
-  --color-surface-dark: #1f2937;
-  --color-text-main: #111827;
-  --color-text-muted: #6b7280;
-  --color-border-color: #e5e7eb;
+  --color-surface-dark: #1e293b;
+  --color-text-main: #1e293b;
+  --color-text-muted: #64748b;
+  --color-border-color: #e2e8f0;
 
-  --font-display: "Inter", "Manrope", sans-serif;
-  --font-body: "Inter", "Manrope", sans-serif;
+  --font-display: "Outfit", "Inter", sans-serif;
+  --font-body: "Inter", sans-serif;
 }
 
 @layer utilities {
@@ -24,6 +25,21 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+  .glass {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+  }
+  .glass-dark {
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  .neon-glow {
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+  }
 }
 
 /* Custom styles for professional storefront look */
@@ -31,6 +47,31 @@ body {
   background-color: var(--color-background-light);
   color: var(--color-text-main);
   font-family: var(--font-body);
+  overflow-x: hidden;
 }
 
-/* Utilities para el verde de marca (usar text-primary, bg-primary, etc) */
+h1, h2, h3, .font-display {
+  font-family: var(--font-display);
+}
+
+::selection {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

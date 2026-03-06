@@ -5,10 +5,22 @@ import { useCart } from '../lib/CartContext';
 import { LayoutGrid, Heart, ShoppingCart, ArrowLeft, Trash2, Leaf } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
+/**
+ * Página de Mis Listas (Favoritos)
+ * 
+ * Permite a los usuarios ver y gestionar los productos que han marcado
+ * con el corazón en la tienda pública. Los favoritos se guardan localmente.
+ */
 export default function ListsPage() {
+    // --- CONTEXTOS ---
+    // Funciones para gestionar la lista de deseos
     const { wishlist, removeFromWishlist, clearWishlist } = useWishlist();
+    // Función para añadir directamente desde favoritos al carrito
     const { addToCart, items: cartItems } = useCart();
 
+    /**
+     * Utilidad para mostrar precios en formato de moneda local.
+     */
     const formatCOP = (value: number) => {
         return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(value);
     };

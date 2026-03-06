@@ -3,6 +3,12 @@ import { useLocation, Link, Navigate } from 'react-router-dom';
 import { CheckCircle2, ShoppingBag, ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
 
+/**
+ * Página de Recibo (Confirmación de Pago)
+ * 
+ * Muestra un resumen visual de la compra exitosa, incluyendo el 
+ * número de orden y el desglose de costos.
+ */
 export default function ReceiptPage() {
     const location = useLocation();
 

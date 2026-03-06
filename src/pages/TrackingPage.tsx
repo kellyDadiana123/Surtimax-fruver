@@ -1,5 +1,11 @@
 import { Link } from 'react-router-dom';
 
+/**
+ * Página de Seguimiento de Pedido (TrackingPage)
+ * 
+ * Permite al usuario rastrear su pedido en tiempo real con datos 
+ * simulados de GPS, sensores de temperatura (IoT) y un asistente de IA.
+ */
 export default function TrackingPage() {
   return (
     <div className="bg-background-light dark:bg-background-dark text-text-main font-display antialiased min-h-screen flex flex-col">

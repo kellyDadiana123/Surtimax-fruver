@@ -4,7 +4,7 @@ import { LogIn, UserPlus, AlertCircle, ShoppingBag, CheckCircle2 } from 'lucide-
 import { motion, AnimatePresence } from 'motion/react';
 
 interface AuthProps {
-  onAuthSuccess: () => void;
+  onAuthSuccess: (user: any) => void;
 }
 
 /**
@@ -18,11 +18,11 @@ interface AuthProps {
 export default function Auth({ onAuthSuccess }: AuthProps) {
   // Estado para alternar entre el modo 'login' (iniciar sesión) y 'register' (registro)
   const [isLogin, setIsLogin] = useState(true);
-  
+
   // Estados para los datos del formulario
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  
+
   // Estados de la interfaz de usuario para carga y retroalimentación interactiva
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,49 +46,74 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
 
     try {
       if (isLogin) {
-        // Iniciar sesión del usuario usando Supabase
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
+        // --- INICIO DE SESIÓN LOCAL ---
+        // Intentar autenticar al usuario con el servicio Express local.
+        const response = await fetch('http://localhost:3001/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
         });
-        if (signInError) throw signInError;
-        
-        // Llamamos al callback de éxito proporcionado por el componente padre (App)
-        onAuthSuccess();
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || 'Error en la autenticación.');
+        }
+
+        // --- ÉXITO ---
+        setSuccessMsg(data.message);
+
+        // Simulamos una sesión mínima para que App.tsx crea que estamos logueados
+        // En una implementación real, aquí guardaríamos un token, etc.
+        onAuthSuccess(data.user);
       } else {
-        // Registrar un nuevo usuario usando Supabase
+        // --- REGISTRO DE NUEVA CUENTA ---
+        // Registrar un nuevo usuario en la base de datos de Supabase.
         const { error: signUpError } = await supabase.auth.signUp({
           email,
           password,
         });
+
+        // Si hay error en el registro (ej: email duplicado), se lanza excepción.
         if (signUpError) throw signUpError;
-        
-        // Mensaje final profesional de éxito al registrarse en lugar de una alerta del navegador
+
+        // Mostrar mensaje de éxito tras la creación de la cuenta.
         setSuccessMsg('¡Cuenta creada exitosamente! Puede que sea necesario confirmar tu correo electrónico.');
-        setIsLogin(true); // Cambiar automáticamente al inicio de sesión
-        setPassword(''); // Limpiar contraseña por seguridad
+
+        // Cambiar automáticamente al modo login para que el usuario pueda ingresar.
+        setIsLogin(true);
+
+        // Limpiar el campo de contraseña por seguridad.
+        setPassword('');
       }
-      
+
     } catch (err: any) {
-      // Capturar y mostrar cualquier error de autenticación con un lenguaje amigable
-      let mensajeError = 'Ocurrió un error inesperado durante el proceso.';
+      // --- MANEJO DE ERRORES ---
+      // Capturar y mostrar cualquier error ocurrido durante el proceso de autenticación.
+
+      // Mensaje de error genérico por defecto solicitado por el usuario.
+      let mensajeError = 'Error en la autenticación.';
+
+      // Personalizar el mensaje de error basado en la respuesta de Supabase.
       if (err.message.includes('Invalid login credentials')) {
-        mensajeError = 'Credenciales incorrectas. Verifica tu correo y contraseña.';
+        mensajeError = 'Error en la autenticación. Verifica tu correo y contraseña.';
       } else if (err.message.includes('User already registered')) {
         mensajeError = 'Este correo electrónico ya está registrado.';
       } else if (err.message.includes('Password should be')) {
         mensajeError = 'La contraseña debe tener al menos 6 caracteres.';
       }
+
+      // Establecer el mensaje de error para mostrarlo en la interfaz.
       setError(mensajeError);
     } finally {
-      // Siempre restablecer el estado de carga independientemente del resultado
+      // Sin importar el resultado (éxito o error), desactivar el estado de carga.
       setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-neutral-50 flex items-center justify-center p-4">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden border border-neutral-200"
@@ -99,7 +124,7 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
               <ShoppingBag className="w-8 h-8 text-white" />
             </div>
           </div>
-          
+
           <h2 className="text-3xl font-extrabold text-center text-neutral-800 mb-2 tracking-tight">
             Surtimax
           </h2>
@@ -109,7 +134,7 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
 
           <AnimatePresence mode="popLayout">
             {error && (
-              <motion.div 
+              <motion.div
                 key="error"
                 initial={{ opacity: 0, height: 0, scale: 0.95 }}
                 animate={{ opacity: 1, height: 'auto', scale: 1 }}
@@ -120,9 +145,9 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
                 <p>{error}</p>
               </motion.div>
             )}
-            
+
             {successMsg && (
-              <motion.div 
+              <motion.div
                 key="success"
                 initial={{ opacity: 0, height: 0, scale: 0.95 }}
                 animate={{ opacity: 1, height: 'auto', scale: 1 }}
@@ -149,7 +174,7 @@ export default function Auth({ onAuthSuccess }: AuthProps) {
                 required
               />
             </div>
-            
+
             <div>
               <label className="block text-sm font-bold text-neutral-700 mb-1.5">
                 Contraseña

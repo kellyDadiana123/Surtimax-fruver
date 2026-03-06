@@ -5,26 +5,45 @@ import { LayoutGrid, ShoppingCart, Trash2, Plus, Minus, ArrowLeft, ShieldCheck, 
 import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '../lib/supabase';
 
+/**
+ * Página del Carrito de Compras (CartPage)
+ * 
+ * Permite al usuario revisar los productos seleccionados, ajustar 
+ * cantidades, ver el desglose de costos (envío, descuentos eco) 
+ * y proceder al pago final.
+ */
 export default function CartPage() {
+  // --- ESTADO Y UTILIDADES ---
+  // Obtener funciones y datos globales del carrito
   const { items, updateQuantity, removeFromCart, totalItems, totalPrice, clearCart } = useCart();
+  // Hook para navegación entre rutas
   const navigate = useNavigate();
 
-  // Constantes de ejemplo para la UI de cobro (Adaptadas a COP)
+  // --- CÁLCULOS DE COSTOS (LOGICA DE NEGOCIO SIMULADA) ---
+  // Costo de envío: Gratis si la compra supera los 100k COP, de lo contrario 12k.
   const shippingCost = totalItems > 0 ? (totalPrice > 100000 ? 0 : 12000) : 0;
+  // Descuento ecológico fijo por usar empaques biodegradables.
   const ecoDiscount = items.length > 0 ? 2500 : 0;
+  // Cálculo final de la transacción.
   const finalTotal = totalItems > 0 ? totalPrice + shippingCost - ecoDiscount : 0;
 
+  /**
+   * Formatea un número como moneda colombiana (COP).
+   */
   const formatCOP = (value: number) => {
     return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(value);
   };
 
+  /**
+   * Maneja la finalización de la compra.
+   * Llama a una función de base de datos (RPC) para descontar stock.
+   */
   const handleCheckout = async () => {
     if (items.length === 0) return;
 
-    // Preparar el cuerpo con los items a descontar
     try {
-      // Usar a la función RPC recién creada
-      // @ts-ignore: Los tipos generados de supabase pueden no detectar correctamente los argumentos de funciones RPC
+      // Intentar procesar la transacción en la base de datos de forma atómica.
+      // @ts-ignore
       const { error } = await supabase.rpc('process_checkout', {
         cart_items: items.map(i => ({ id: i.id, quantity: i.quantity }))
       });
@@ -35,7 +54,7 @@ export default function CartPage() {
         return;
       }
 
-      // Construir la información del recibo
+      // Generación de información básica para el recibo digital.
       const orderInfo = {
         orderNumber: Math.floor(100000 + Math.random() * 900000).toString(),
         totalItems,
@@ -45,8 +64,9 @@ export default function CartPage() {
         finalTotal
       };
 
+      // Limpiar el carrito local tras el éxito.
       clearCart();
-      // Redirigir a la vista del recibo enviando el orderInfo en el state
+      // Redirigir a la vista del recibo enviando la información en el estado de la ruta.
       navigate('/receipt', { state: { orderInfo } });
 
     } catch (err) {

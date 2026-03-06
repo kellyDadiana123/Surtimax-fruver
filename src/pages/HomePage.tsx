@@ -5,20 +5,75 @@ import { Session } from '@supabase/supabase-js';
 import { Product } from '../types/supabase';
 import { useCart } from '../lib/CartContext';
 import { useWishlist } from '../lib/WishlistContext';
-import { ShoppingCart, LogIn, LogOut, LayoutGrid, AlertCircle, ShoppingBag, Plus, Heart, Tag } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { ShoppingCart, LogIn, LogOut, LayoutGrid, AlertCircle, ShoppingBag, Plus, Heart, Tag, Sparkles } from 'lucide-react';
+import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
+import CrazyButton from '../components/CrazyButton';
+import FloatingFruits from '../components/FloatingFruits';
 
+/**
+ * Página Principal del Escaparate (HomePage)
+ * 
+ * Es la cara pública de Surtimax donde se muestran las ofertas, el mercado
+ * y se gestiona la interacción principal con el carrito y listas de deseos.
+ */
 export default function HomePage() {
+  // --- ESTADO DE DATOS ---
+  // Almacena la lista de productos obtenida de la base de datos
   const [products, setProducts] = useState<Product[]>([]);
+  // Indica si la aplicación está en proceso de carga inicial de datos
   const [loading, setLoading] = useState(true);
+  // Almacena la sesión actual del usuario autenticado
   const [session, setSession] = useState<Session | null>(null);
 
-  // Usar el contexto global
+  // --- CONTEXTOS GLOBALES ---
+  // Acceder a las funciones del carrito (contexto global)
   const { addToCart, totalItems, items } = useCart();
+  // Acceder a las funciones de la lista de deseos (contexto global)
   const { wishlist, addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
-  // Estados para notificación Toast temporal de "producto agregado"
+  // --- INTERFAZ Y ANIMACIONES ---
+  // Estado para controlar la aparición de notificaciones tipo Toast
   const [toast, setToast] = useState<string | null>(null);
+
+  // Utilidades de Framer Motion para efectos de scroll (Parallax)
+  const { scrollY } = useScroll();
+  const y1 = useTransform(scrollY, [0, 500], [0, 200]);   // Movimiento lento para el fondo
+  const y2 = useTransform(scrollY, [0, 500], [0, -150]);  // Movimiento opuesto para elementos decorativos
+
+  // --- LÓGICA DE "FRUTA LOCA" (MYSTERY FRUIT) ---
+  // Controla si el sorteo está en curso
+  const [isSpinning, setIsSpinning] = useState(false);
+  // Almacena el producto seleccionado aleatoriamente
+  const [mysteryFruit, setMysteryFruit] = useState<Product | null>(null);
+
+  /**
+   * Ejecuta el efecto visual de "tragamonedas" para recomendar una fruta al azar.
+   */
+  const handleMysteryFruit = () => {
+    if (products.length === 0 || isSpinning) return;
+    setIsSpinning(true);
+    setMysteryFruit(null);
+
+    let count = 0;
+    const interval = setInterval(() => {
+      // Selección aleatoria temporal para efecto visual
+      setMysteryFruit(products[Math.floor(Math.random() * products.length)]);
+      count++;
+
+      // Detener después de 20 iteraciones (aprox 2 segundos)
+      if (count > 20) {
+        clearInterval(interval);
+        // Selección final
+        const finalFruit = products[Math.floor(Math.random() * products.length)];
+        setMysteryFruit(finalFruit);
+        setIsSpinning(false);
+
+        // Notificación de la recomendación
+        setToast(`¡Tu Fruta Loca es: ${finalFruit.name}!`);
+        setTimeout(() => setToast(null), 4000);
+      }
+    }, 100);
+  };
 
   const showToast = (productName: string) => {
     setToast(`¡${productName} agregado al carrito!`);
@@ -54,21 +109,29 @@ export default function HomePage() {
     fetchProducts();
 
     // Auth Listener
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session as Session);
-    });
+    const localSession = localStorage.getItem('local-session');
+    if (localSession) {
+      setSession(JSON.parse(localSession));
+    } else {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        setSession(session as Session);
+      });
+    }
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, currentSession) => {
-      setSession(currentSession as Session);
+      if (currentSession) {
+        setSession(currentSession as Session);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-neutral-50 text-neutral-800 font-sans antialiased">
+    <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-slate-50 text-slate-900 font-sans antialiased">
+      <FloatingFruits />
 
       {/* Sistema Integrado de Notificaciones (Toasts) */}
       <AnimatePresence>
@@ -99,16 +162,24 @@ export default function HomePage() {
         </nav>
         <div className="flex items-center gap-3">
           {session ? (
-            <button
-              onClick={async () => {
-                await supabase.auth.signOut();
-                setToast("Sesión cerrada");
-                setTimeout(() => setToast(null), 3000);
-              }}
-              className="hidden md:flex h-10 items-center justify-center rounded-xl bg-red-50 px-4 text-sm font-bold text-red-600 hover:bg-red-100 transition-colors gap-2"
-            >
-              <LogOut className="w-4 h-4" /> Salir
-            </button>
+            <div className="flex items-center gap-4">
+              <div className="hidden lg:flex flex-col items-end">
+                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Bienvenido</span>
+                <span className="text-sm font-bold text-neutral-800">{session.user?.email?.split('@')[0]}</span>
+              </div>
+              <button
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  localStorage.removeItem('local-session');
+                  setSession(null);
+                  setToast("Sesión cerrada");
+                  setTimeout(() => setToast(null), 3000);
+                }}
+                className="flex h-10 items-center justify-center rounded-xl bg-red-50 px-4 text-sm font-bold text-red-600 hover:bg-red-100 transition-colors gap-2"
+              >
+                <LogOut className="w-4 h-4" /> Salir
+              </button>
+            </div>
           ) : (
             <Link to="/login" className="hidden md:flex h-10 items-center justify-center rounded-xl bg-neutral-100 px-4 text-sm font-bold text-neutral-700 hover:bg-neutral-200 transition-colors gap-2">
               <LogIn className="w-4 h-4" /> Ingresar
@@ -129,26 +200,83 @@ export default function HomePage() {
       <main className="flex-1 flex flex-col items-center w-full px-4 py-6 md:px-8 lg:px-10">
         <div className="w-full max-w-6xl space-y-10">
 
-          {/* Hero Banner Minimalista Premium */}
-          <div className="relative overflow-hidden rounded-3xl bg-neutral-900 text-white shadow-xl shadow-neutral-900/10 group h-[340px] flex items-center">
-            <div className="absolute inset-0 z-0">
-              <img alt="Vegetales frescos" className="h-full w-full object-cover opacity-80" src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=1200" />
-              <div className="absolute inset-0 bg-gradient-to-r from-neutral-900/95 via-neutral-900/70 to-transparent"></div>
-            </div>
-            <div className="relative z-10 flex flex-col justify-center gap-5 p-8 md:p-12 lg:p-16 w-full lg:w-2/3">
-              <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/20 backdrop-blur-md px-3 py-1.5 text-xs font-extrabold uppercase tracking-widest text-emerald-400 border border-emerald-500/30 w-fit">
-                Nuevos Productos Frescos Del Campo
-              </div>
-              <div>
-                <h1 className="font-sans text-4xl font-extrabold leading-[1.1] tracking-tight md:text-5xl lg:text-6xl text-white">
-                  Del Campo a tu <br /><span className="text-emerald-400">Mesa en Horas.</span>
+          {/* Hero Banner Dinámico "Loco" */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 text-white shadow-2xl shadow-emerald-900/20 h-[450px] flex items-center"
+          >
+            <motion.div style={{ y: y1 }} className="absolute inset-0 z-0">
+              <img alt="Vegetales frescos" className="h-[120%] w-full object-cover opacity-60 scale-110" src="https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&q=80&w=1200" />
+              <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent"></div>
+            </motion.div>
+
+            <div className="relative z-10 flex flex-col justify-center gap-6 p-8 md:p-12 lg:p-20 w-full lg:w-2/3">
+              <motion.div
+                initial={{ x: -20, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="inline-flex items-center gap-2 rounded-full bg-emerald-500/20 backdrop-blur-md px-4 py-2 text-xs font-black uppercase tracking-[0.2em] text-emerald-400 border border-emerald-500/30 w-fit"
+              >
+                <Sparkles className="w-3 h-3" /> Cosecha del Día Directa
+              </motion.div>
+
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.3 }}
+              >
+                <h1 className="font-display text-5xl font-black leading-[1] tracking-tight md:text-6xl lg:text-7xl">
+                  Frescura <br />
+                  <span className="bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent">Nivel Súper Loco.</span>
                 </h1>
-                <p className="mt-4 max-w-lg text-lg text-neutral-300 font-medium leading-relaxed">
-                  Conectamos la cosecha diaria directamente contigo. Apoyando el talento local mientras disfrutas de la mejor frescura del mercado.
+                <p className="mt-6 max-w-lg text-lg text-slate-300 font-medium leading-relaxed">
+                  No es solo un fruver, es una explosión de sabor directo del campo. ¿Te atreves a probar lo más fresco hoy?
                 </p>
+              </motion.div>
+
+              <div className="flex flex-wrap gap-4 mt-4">
+                <CrazyButton onClick={() => document.getElementById('ofertas')?.scrollIntoView({ behavior: 'smooth' })}>
+                  Ver Ofertas 🔥
+                </CrazyButton>
+                <CrazyButton variant="ghost" onClick={handleMysteryFruit}>
+                  {isSpinning ? 'Girando...' : 'Fruta Loca 🎲'}
+                </CrazyButton>
               </div>
             </div>
-          </div>
+
+            {/* Elemento decorativo parallax secundario */}
+            <motion.div
+              style={{ y: y2 }}
+              className="absolute right-10 top-10 z-0 hidden lg:block"
+            >
+              <div className="text-[180px] filter blur-sm opacity-20 select-none">🥦</div>
+            </motion.div>
+          </motion.div>
+
+          <AnimatePresence>
+            {mysteryFruit && !isSpinning && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden"
+              >
+                <div className="bg-amber-50 border-2 border-amber-200 rounded-3xl p-6 flex flex-col md:flex-row items-center gap-6 shadow-lg">
+                  <div className="w-24 h-24 bg-white rounded-2xl flex items-center justify-center p-2 shadow-inner">
+                    <img src={mysteryFruit.image_url || ''} alt={mysteryFruit.name} className="max-h-full max-w-full object-contain" />
+                  </div>
+                  <div className="flex-1 text-center md:text-left">
+                    <h3 className="text-xl font-black text-amber-900">¡Tu Fruta del Destino!</h3>
+                    <p className="text-amber-700 font-medium">Te recomendamos probar {mysteryFruit.name} hoy mismo.</p>
+                  </div>
+                  <CrazyButton variant="accent" onClick={(e) => handleAddToCart(mysteryFruit, e as any)}>
+                    ¡Me la Llevo!
+                  </CrazyButton>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <section>
             <div className="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-2 border-b border-neutral-200 pb-4">
@@ -185,9 +313,23 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                  <motion.div
+                    initial="hidden"
+                    whileInView="show"
+                    viewport={{ once: true }}
+                    variants={{
+                      hidden: { opacity: 0 },
+                      show: {
+                        opacity: 1,
+                        transition: {
+                          staggerChildren: 0.1
+                        }
+                      }
+                    }}
+                    className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+                  >
                     {/* Mostramos los productos administrados que están marcados como ofertas */}
-                    {products.filter(p => p.is_offer).map((product) => {
+                    {products.filter(p => p.is_offer).map((product, idx) => {
                       const cartItem = items.find(i => i.id === product.id);
                       const availableStock = product.stock - (cartItem ? cartItem.quantity : 0);
                       const esFavorito = isInWishlist(product.id);
@@ -196,7 +338,14 @@ export default function HomePage() {
                       const precioOriginal = product.price * 1.25;
 
                       return (
-                        <div key={`oferta-${product.id}`} className="group flex flex-col rounded-2xl border border-red-100 bg-white p-3 hover:shadow-xl hover:shadow-red-900/10 transition-all relative">
+                        <motion.div
+                          key={`oferta-${product.id}`}
+                          variants={{
+                            hidden: { y: 20, opacity: 0 },
+                            show: { y: 0, opacity: 1 }
+                          }}
+                          className="group flex flex-col rounded-2xl border border-red-100 bg-white p-3 hover:shadow-xl hover:shadow-red-900/10 transition-all relative"
+                        >
                           <button
                             onClick={() => esFavorito ? removeFromWishlist(product.id) : addToWishlist(product)}
                             className={`absolute top-5 right-5 z-10 p-2 bg-white/90 backdrop-blur rounded-full shadow-sm transition-transform hover:scale-110 active:scale-95 ${esFavorito ? 'text-red-500' : 'text-neutral-400 hover:text-red-500'}`}
@@ -256,10 +405,10 @@ export default function HomePage() {
                               </button>
                             </div>
                           </div>
-                        </div>
+                        </motion.div>
                       )
                     })}
-                  </div>
+                  </motion.div>
                 </div>
 
                 {/* 🌿 SECCIÓN: SUGERENCIAS PARA TI (Resto del catálogo) */}
@@ -272,14 +421,35 @@ export default function HomePage() {
                       <p className="text-sm font-medium text-neutral-500 mt-1">Los favoritos locales actualizados en tiempo real.</p>
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                  <motion.div
+                    initial="hidden"
+                    whileInView="show"
+                    viewport={{ once: true }}
+                    variants={{
+                      hidden: { opacity: 0 },
+                      show: {
+                        opacity: 1,
+                        transition: {
+                          staggerChildren: 0.05
+                        }
+                      }
+                    }}
+                    className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+                  >
                     {products.map((product) => {
                       const cartItem = items.find(i => i.id === product.id);
                       const availableStock = product.stock - (cartItem ? cartItem.quantity : 0);
                       const esFavorito = isInWishlist(product.id);
 
                       return (
-                        <div key={product.id} className="group flex flex-col rounded-2xl border border-neutral-100 bg-white p-3 hover:shadow-xl hover:shadow-emerald-900/5 transition-all relative">
+                        <motion.div
+                          key={product.id}
+                          variants={{
+                            hidden: { y: 20, opacity: 0 },
+                            show: { y: 0, opacity: 1 }
+                          }}
+                          className="group flex flex-col rounded-2xl border border-neutral-100 bg-white p-3 hover:shadow-xl hover:shadow-emerald-900/5 transition-all relative"
+                        >
                           <button
                             onClick={() => esFavorito ? removeFromWishlist(product.id) : addToWishlist(product)}
                             className={`absolute top-5 right-5 z-10 p-2 bg-white/90 backdrop-blur rounded-full shadow-sm transition-transform hover:scale-110 active:scale-95 ${esFavorito ? 'text-red-500' : 'text-neutral-400 hover:text-red-500'}`}
@@ -341,10 +511,10 @@ export default function HomePage() {
                               </button>
                             </div>
                           </div>
-                        </div>
+                        </motion.div>
                       )
                     })}
-                  </div>
+                  </motion.div>
                 </div>
               </div>
             )}

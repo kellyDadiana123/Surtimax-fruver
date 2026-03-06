@@ -27,43 +27,72 @@ export const useCart = () => {
     return context;
 };
 
-// Proveedor del estado del carrito para envolver la aplicación
+/**
+ * Contexto de Gestión del Carrito (CartContext)
+ * 
+ * Centraliza toda la lógica de compra de la aplicación, permitiendo
+ * agregar, eliminar y actualizar productos desde cualquier componente.
+ * Implementa persistencia automática en el almacenamiento local (localStorage).
+ */
 export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-    // Inicializar estado desde localStorage si existe
+    // --- ESTADO INICIAL ---
+    // Se intenta recuperar el carrito previamente guardado en el navegador.
     const [items, setItems] = useState<CartItem[]>(() => {
         try {
             const stored = localStorage.getItem('surtimax_cart');
             return stored ? JSON.parse(stored) : [];
         } catch {
+            // Si hay error en el parseo, devolver un carrito vacío.
             return [];
         }
     });
 
-    // Efecto para guardar en localStorage cada vez que cambia el carrito
+    /**
+     * EFECTO DE PERSISTENCIA
+     * Cada vez que el estado del carrito cambie, se actualiza el localStorage.
+     */
     useEffect(() => {
         localStorage.setItem('surtimax_cart', JSON.stringify(items));
     }, [items]);
 
+    /**
+     * Agrega un nuevo producto al carrito o incrementa su cantidad.
+     * @param product El objeto producto a añadir.
+     */
     const addToCart = (product: Product) => {
         setItems((prev) => {
+            // Verificar si el producto ya está en el carrito
             const existing = prev.find((item) => item.id === product.id);
+
             if (existing) {
-                // Incrementa si hay stock disponible
+                // Validación de stock: No permitir agregar más si se alcanza el límite.
                 if (existing.quantity >= product.stock) return prev;
+
+                // Mapear los items e incrementar la cantidad del producto encontrado.
                 return prev.map((item) =>
                     item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
                 );
             }
-            // Agregar nuevo producto al carrito con cantidad inicial 1
+            // Si no existe, agregarlo como un nuevo elemento con cantidad 1.
             return [...prev, { ...product, quantity: 1 }];
         });
     };
 
+    /**
+     * Elimina completamente un producto del carrito.
+     * @param productId ID único del producto a remover.
+     */
     const removeFromCart = (productId: string) => {
         setItems((prev) => prev.filter((item) => item.id !== productId));
     };
 
+    /**
+     * Actualiza manualmente la cantidad de un producto.
+     * @param productId ID del producto.
+     * @param quantity Nueva cantidad deseada.
+     */
     const updateQuantity = (productId: string, quantity: number) => {
+        // Si la cantidad es 0 o menor, el producto se elimina automáticamente.
         if (quantity <= 0) {
             removeFromCart(productId);
             return;
@@ -72,7 +101,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setItems((prev) =>
             prev.map((item) => {
                 if (item.id === productId) {
-                    // No permitir exceder el stock máximo
+                    // Verificación de stock para evitar exceder la disponibilidad física.
                     const safeQuantity = Math.min(quantity, item.stock);
                     return { ...item, quantity: safeQuantity };
                 }

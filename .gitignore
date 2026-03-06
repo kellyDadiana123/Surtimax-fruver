@@ -6,3 +6,7 @@ coverage/
 *.log
 .env*
 !.env.example
+
+# Local SQLite and debug scripts
+users.db
+check-users.ts

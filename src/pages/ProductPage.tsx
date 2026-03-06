@@ -1,5 +1,11 @@
 import { Link } from 'react-router-dom';
 
+/**
+ * Página de Detalle de Producto (Vista Estática)
+ * 
+ * Muestra información detallada de un producto (fresas en este ejemplo),
+ * incluyendo trazabilidad blockchain y monitoreo de cadena de frío.
+ */
 export default function ProductPage() {
   return (
     <div className="bg-background-light text-text-main antialiased min-h-screen flex flex-col font-display">
